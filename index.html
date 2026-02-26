@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻将·幸运值计算器 (万能牌分布)</title>
+    <title>麻将·幸运值计算器 (升级版·含平均值与评语)</title>
     <style>
         * {
             box-sizing: border-box;
@@ -19,7 +19,7 @@
             padding: 16px;
         }
         .calculator {
-            max-width: 720px;
+            max-width: 800px;
             width: 100%;
             background: rgba(248, 241, 229, 0.95);
             backdrop-filter: blur(8px);
@@ -149,9 +149,10 @@
         .luck-index {
             background: #eedbba;
             border-radius: 40px;
-            padding: 25px 20px;
+            padding: 20px 20px;
             text-align: center;
             border: 3px solid #aa8749;
+            margin-bottom: 18px;
         }
         .luck-index .label {
             font-size: 1.7rem;
@@ -167,6 +168,46 @@
             text-shadow: 3px 3px 0 #bca459;
             line-height: 1.2;
             word-break: break-word;
+        }
+        .avg-panel {
+            background: #dacaa4;
+            border-radius: 30px;
+            padding: 18px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-around;
+            gap: 12px;
+            border: 2px solid #b39250;
+            margin-bottom: 15px;
+        }
+        .avg-item {
+            background: #3e614b;
+            border-radius: 50px;
+            padding: 12px 18px;
+            color: #fff5cf;
+            font-weight: 600;
+            min-width: 170px;
+            text-align: center;
+            box-shadow: inset 0 2px 5px #1f3327, 0 4px 0 #1b2b20;
+        }
+        .avg-item span {
+            display: block;
+            font-size: 1.9rem;
+            font-weight: 800;
+            font-family: 'Courier New', monospace;
+            color: #fedb7a;
+            line-height: 1.3;
+        }
+        .verdict {
+            background: #b59e6b;
+            border-radius: 40px;
+            padding: 16px 22px;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1d331f;
+            text-align: center;
+            border: 3px solid #eedba5;
+            box-shadow: inset 0 2px 5px #7f653a;
         }
         .formula-note {
             font-size: 0.95rem;
@@ -196,18 +237,18 @@
 </head>
 <body>
     <div class="calculator">
-        <h1>🀄️ 麻 · 将 · 幸 · 运 · 值 🀄️</h1>
+        <h1>🀄️ 麻 · 将 · 幸 · 运 · 值 ·  PRO 🀄️</h1>
         <div class="sub"><strong>Luck Index</strong> = P(M<sub>P</sub>|H₁) / P(M<sub>P</sub>|H₀)</div>
         
         <div class="input-panel">
             <div class="field-row">
                 <label>🔢 局数 P</label>
-                <input type="number" id="pInput" value="3" min="1" max="20" step="1">
-                <span class="hint">1 ~ 20 局</span>
+                <input type="number" id="pInput" value="40" min="1" step="1">
+                <span class="hint">正整数</span>
             </div>
             <div class="field-row">
                 <label>🃏 总万能牌 k</label>
-                <input type="number" id="kInput" value="5" min="0" max="140" step="1">
+                <input type="number" id="kInput" value="59" min="0" max="1000" step="1">
                 <span class="hint">0 ~ 7·P</span>
             </div>
             <div class="field-row">
@@ -230,133 +271,111 @@
                 <div class="label">🍀 幸运指数 🍀</div>
                 <div class="value" id="luckValue">—</div>
             </div>
+
+            <!-- 新增：平均对比区域 -->
+            <div class="avg-panel" id="avgPanel">
+                <div class="avg-item">你的平均 <span id="yourAvg">—</span></div>
+                <div class="avg-item">H₀ 理论平均 <span id="h0Avg">—</span></div>
+                <div class="avg-item">H₁ 理论平均 <span id="h1Avg">—</span></div>
+            </div>
+
+            <!-- 新增：评语区域 -->
+            <div class="verdict" id="verdictMsg">等待计算...</div>
+
             <div class="formula-note">
-                <code> M<sub>P</sub> = k · H₁: 截断泊松(μ·P) · H₀: P重卷积(单局分布|λ) </code>
+                <code> 单局万能牌0~7 · 截断泊松(H₁) vs 复杂卷积(H₀) · 参数μ/λ可调 </code>
             </div>
         </div>
-        <footer>⚙️ 单局万能牌范围 0～7 · 卷积计算 · 参数可调</footer>
+        <footer>⚡ 幸运指数 ≥3 弱证据 · ≥10 中等证据 · ≥30 准备赢钱 ⚡</footer>
     </div>
 
     <script>
         (function() {
-            // ---------- 预计算阶乘对数 (最大支持到 1500 保证安全) ----------
+            // ---------- 预计算阶乘对数 (最大支持到 2000 保证安全) ----------
             const MAX_FACT = 2000;
             const logFact = new Array(MAX_FACT + 1).fill(0);
             for (let i = 1; i <= MAX_FACT; i++) {
                 logFact[i] = logFact[i-1] + Math.log(i);
             }
 
-            // 安全组合数对数 (若无效返回 -Infinity)
             function logC(n, k) {
                 if (k < 0 || k > n || n < 0) return -Infinity;
-                // 使用阶乘对数
                 return logFact[n] - logFact[k] - logFact[n - k];
             }
 
-            // log-sum-exp 技巧 (输入数组可能包含 -Infinity)
             function logSumExp(logValues) {
                 let maxVal = -Infinity;
-                for (let v of logValues) {
-                    if (v > maxVal) maxVal = v;
-                }
-                if (maxVal === -Infinity) return -Infinity; // 所有项无效
+                for (let v of logValues) if (v > maxVal) maxVal = v;
+                if (maxVal === -Infinity) return -Infinity;
                 let sumExp = 0;
-                for (let v of logValues) {
-                    if (v > -Infinity) {
-                        sumExp += Math.exp(v - maxVal);
-                    }
-                }
+                for (let v of logValues) if (v > -Infinity) sumExp += Math.exp(v - maxVal);
                 return maxVal + Math.log(sumExp);
             }
 
-            // ---------- 计算单局分布 (H0 下，参数 lambda) 返回数组 P(M_A = k)  k = 0..7 ----------
+            // ---------- 计算单局分布 (H0 下，参数 lambda) 返回概率数组 [0..7] 以及均值 ----------
             function computeOneRoundDistrib(lambda) {
-                // 结果数组 (对数域累积)
                 const logProbK = new Array(8).fill(-Infinity);
 
-                // 遍历 s = 2 .. 12
                 for (let s = 2; s <= 12; s++) {
-                    const w = (6 - Math.abs(s - 7)) / 36;      // 权重 (6-|s-7|)/36
+                    const w = (6 - Math.abs(s - 7)) / 36;
                     if (w <= 0) continue;
                     const logW = Math.log(w);
 
-                    // 计算 Z(s) = sum_{n=53}^{136-2s} λ^n / n!
                     const nMin = 53;
                     const nMax = 136 - 2 * s;
                     if (nMax < nMin) continue;
 
-                    // 收集 n 的对数项用于 logZ
-                    const logTermsForZ = [];
+                    // 计算 Z(s) = sum_{n=53}^{nMax} λ^n / n!
+                    const logTermsZ = [];
                     for (let n = nMin; n <= nMax; n++) {
-                        const logTerm = n * Math.log(lambda) - logFact[n];
-                        logTermsForZ.push(logTerm);
+                        logTermsZ.push(n * Math.log(lambda) - logFact[n]);
                     }
-                    const logZ = logSumExp(logTermsForZ);
-                    if (logZ === -Infinity) continue; // Z(s) 为零不可能，但防御
+                    const logZ = logSumExp(logTermsZ);
+                    if (logZ === -Infinity) continue;
 
-                    // 遍历 n
                     for (let n = nMin; n <= nMax; n++) {
-                        const logLambdaTerm = n * Math.log(lambda) - logFact[n]; // λ^n/n! 对数
-                        // 内部减去 logZ => 条件概率
-                        const logGivenS = logLambdaTerm - logZ; 
+                        const logLambdaTerm = n * Math.log(lambda) - logFact[n];
+                        const logGivenS = logLambdaTerm - logZ;   // P(n|s)
 
                         const floorN4 = Math.floor(n / 4);
-                        // 限制 floorN4 有效性
-                        if (floorN4 > 136 - 2 * s) continue; 
+                        if (floorN4 > 136 - 2*s) continue;
 
-                        // 遍历 m = 0..7
                         for (let m = 0; m <= 7; m++) {
-                            // 组合数 C(7,m)
                             const logC7m = logC(7, m);
                             if (logC7m === -Infinity) continue;
 
-                            // C(128, 136-2s-m)  注意 135-7 = 128
                             const firstCombiArg = 128; // 135-7
                             const secondIndex = 136 - 2*s - m;
-                            if (secondIndex < 0 || secondIndex > firstCombiArg) continue; // 组合无效
+                            if (secondIndex < 0 || secondIndex > firstCombiArg) continue;
                             const logC128 = logC(firstCombiArg, secondIndex);
                             if (logC128 === -Infinity) continue;
 
-                            // C(135, 136-2s) 作为分母
                             const logC135total = logC(135, 136 - 2*s);
                             if (logC135total === -Infinity) continue;
 
-                            // 超几何部分: C(m, k) * C(136-2s-m, floorN4 - k) / C(136-2s, floorN4)
-                            // 但这里 k 未知, 我们针对每个 k 累加. 将内部求和放到 k 循环
-                            // 先提取公共分母 log( C(136-2s, floorN4) )
                             const logDenomHyper = logC(136 - 2*s, floorN4);
                             if (logDenomHyper === -Infinity) continue;
 
-                            // 对每个 k=0..7 内层求和 (实际上公式中 m 循环在内, 但这里我们把 k 循环放在最外面)
-                            // 我们在此处已经固定 s,n,m, 内层本来是对 m 求和, 但还有组合C(m,k)... 
-                            // 实际上原式: sum_s sum_n [ ... * sum_m [ ... * C(m,k) * C(...)/C(...) ] ]
-                            // 所以我们继续对 k 循环, 将贡献加入 logProbK[k]
                             for (let k = 0; k <= 7; k++) {
-                                // 组合 C(m, k)
-                                if (k > m) continue; 
+                                if (k > m) continue;
                                 const logCm_k = logC(m, k);
                                 if (logCm_k === -Infinity) continue;
 
-                                // C(136-2s-m, floorN4 - k)
                                 const remaining = 136 - 2*s - m;
                                 const need = floorN4 - k;
                                 if (need < 0 || need > remaining) continue;
                                 const logCrem_need = logC(remaining, need);
                                 if (logCrem_need === -Infinity) continue;
 
-                                // 分子超几何部分: logCm_k + logCrem_need - logDenomHyper
                                 const logHyper = logCm_k + logCrem_need - logDenomHyper;
 
-                                // 整项对数: logW + logGivenS + [logC7m + logC128 - logC135total] + logHyper
                                 let logTerm = logW + logGivenS + (logC7m + logC128 - logC135total) + logHyper;
 
-                                // 累加到 logProbK[k]  (log-sum-exp)
+                                // 合并到 logProbK[k]
                                 if (logTerm > -Infinity) {
                                     if (logProbK[k] === -Infinity) {
                                         logProbK[k] = logTerm;
                                     } else {
-                                        // 合并两个对数: 直接采用 logSumExp 小规模合并, 但频繁调用慢; 手动合并
-                                        // 采用常用方式: 设 a = logProbK[k], b = logTerm, 合并为 max + log(1+exp(差))
                                         const a = logProbK[k];
                                         const b = logTerm;
                                         if (a > b) {
@@ -366,43 +385,36 @@
                                         }
                                     }
                                 }
-                            } // k 循环
-                        } // m 循环
-                    } // n 循环
-                } // s 循环
-
-                // 将对数概率转为真实概率，并归一化
-                let maxLog = Math.max(...logProbK);
-                if (maxLog === -Infinity) {
-                    // 保底均匀（实际不会发生）
-                    return new Array(8).fill(1/8);
+                            }
+                        }
+                    }
                 }
+
+                // 归一化得到概率
+                let maxLog = Math.max(...logProbK);
+                if (maxLog === -Infinity) return { prob: new Array(8).fill(1/8), mean: 3.5 }; // 保底
+
                 let expVals = new Array(8);
                 let sumExp = 0;
                 for (let i = 0; i < 8; i++) {
-                    if (logProbK[i] === -Infinity) {
-                        expVals[i] = 0;
-                    } else {
-                        expVals[i] = Math.exp(logProbK[i] - maxLog);
-                        sumExp += expVals[i];
-                    }
+                    expVals[i] = logProbK[i] === -Infinity ? 0 : Math.exp(logProbK[i] - maxLog);
+                    sumExp += expVals[i];
                 }
-                // 归一化
-                for (let i = 0; i < 8; i++) {
-                    expVals[i] = sumExp > 0 ? expVals[i] / sumExp : 0;
-                }
-                return expVals; // 概率数组 [0..7]
+                for (let i = 0; i < 8; i++) expVals[i] /= sumExp;
+
+                // 计算均值
+                let mean = 0;
+                for (let i = 0; i < 8; i++) mean += i * expVals[i];
+                return { prob: expVals, mean: mean };
             }
 
-            // ---------- 卷积函数: 将分布 dist 卷积 n 次 (n>=1) ----------
+            // 卷积函数
             function convolveDist(dist, n) {
-                if (n === 0) return [1]; // 零局(不会用到)
-                // dist 是概率数组, 索引为取值 0..len-1
-                let result = [1.0]; // 0 局时 P(M=0)=1
+                if (n === 0) return [1];
+                let result = [1.0];
                 for (let i = 0; i < n; i++) {
                     const newLen = result.length + dist.length - 1;
                     const next = new Array(newLen).fill(0);
-                    // 卷积: next[t] = sum_{x} result[x] * dist[t-x]
                     for (let x = 0; x < result.length; x++) {
                         if (result[x] === 0) continue;
                         for (let d = 0; d < dist.length; d++) {
@@ -415,54 +427,47 @@
                 return result;
             }
 
-            // ---------- 分子概率 (截断泊松 H1) ----------
+            // 分子概率 (截断泊松 H1)
             function probH1(P, mu, k) {
                 const pMu = P * mu;
-                const maxK = 7 * P; // 最大可能万能牌数
+                const maxK = 7 * P;
                 if (k < 0 || k > maxK) return 0;
-                // 计算未归一化的泊松值: (pMu)^k * e^{-pMu} / k!
+
                 const logProbK = k * Math.log(pMu) - pMu - logFact[k];
-                // 计算归一化常数 Z = sum_{i=0}^{7P} (pMu)^i e^{-pMu} / i!
+
                 let logNorm = -Infinity;
                 for (let i = 0; i <= maxK; i++) {
                     const logTerm = i * Math.log(pMu) - pMu - logFact[i];
-                    if (logNorm === -Infinity) {
-                        logNorm = logTerm;
-                    } else {
-                        const a = logNorm;
-                        const b = logTerm;
-                        if (a > b) {
-                            logNorm = a + Math.log(1 + Math.exp(b - a));
-                        } else {
-                            logNorm = b + Math.log(1 + Math.exp(a - b));
-                        }
+                    if (logNorm === -Infinity) logNorm = logTerm;
+                    else {
+                        const a = logNorm, b = logTerm;
+                        logNorm = a > b ? a + Math.log(1 + Math.exp(b - a)) : b + Math.log(1 + Math.exp(a - b));
                     }
                 }
-                const prob = Math.exp(logProbK - logNorm);
-                return prob;
+                return Math.exp(logProbK - logNorm);
             }
 
-            // ---------- 分母概率: 从卷积结果中查找 ----------
-            function probH0(convDist, k) {
-                if (k < 0 || k >= convDist.length) return 0;
-                return convDist[k];
+            // 计算理论平均(H1): 截断泊松的期望 (近似，直接使用截断前的pμ，因为截断影响很小)
+            function meanH1(P, mu) {
+                return P * mu; // 近似，实际截断后略小，但作为展示足够了
             }
 
             // ---------- 主计算函数 ----------
             function computeLuckIndex(P, k, mu, lambda) {
-                // 1. 计算单局分布 (H0)
-                const oneDist = computeOneRoundDistrib(lambda);
-                // 2. 计算 P 重卷积
+                // 1. 单局分布 (H0)
+                const { prob: oneDist, mean: mean0 } = computeOneRoundDistrib(lambda);
+                // 2. P重卷积
                 const totalDist = convolveDist(oneDist, P);
                 // 3. 分母概率
-                const p0 = probH0(totalDist, k);
+                const p0 = (k >= 0 && k < totalDist.length) ? totalDist[k] : 0;
                 // 4. 分子概率
                 const p1 = probH1(P, mu, k);
+                // 5. 理论平均 H0
+                const theoryH0 = mean0 * P;
+                // 6. 理论平均 H1 (近似)
+                const theoryH1 = meanH1(P, mu);
 
-                if (p0 === 0) {
-                    return p1 > 0 ? Infinity : NaN;
-                }
-                return p1 / p0;
+                return { p1, p0, index: p0 === 0 ? (p1 > 0 ? Infinity : NaN) : p1 / p0, theoryH0, theoryH1, oneDist };
             }
 
             // ---------- UI 绑定 ----------
@@ -471,7 +476,12 @@
             const muInput = document.getElementById('muInput');
             const lambdaInput = document.getElementById('lambdaInput');
             const calcBtn = document.getElementById('calcBtn');
+
             const luckSpan = document.getElementById('luckValue');
+            const yourAvgSpan = document.getElementById('yourAvg');
+            const h0AvgSpan = document.getElementById('h0Avg');
+            const h1AvgSpan = document.getElementById('h1Avg');
+            const verdictSpan = document.getElementById('verdictMsg');
 
             function updateLuck() {
                 let P = parseInt(pInput.value, 10);
@@ -479,52 +489,69 @@
                 let mu = parseFloat(muInput.value);
                 let lambda = parseFloat(lambdaInput.value);
 
-                // 基本校验
                 if (isNaN(P) || P < 1) P = 1;
                 if (isNaN(k) || k < 0) k = 0;
                 if (isNaN(mu) || mu <= 0) mu = 3.0;
                 if (isNaN(lambda) || lambda <= 0) lambda = 100.0;
 
-                // 建议P不要太大防止卡顿
-                if (P > 30) {
-                    if (!confirm(`局数 P = ${P} 较大，卷积计算可能需要几秒钟，是否继续？`)) {
-                        return;
-                    }
+                // 检查k是否超过可能最大值 (7*P)
+                const maxPossible = 7 * P;
+                if (k > maxPossible) {
+                    alert(`总万能牌数 k 不能超过 ${maxPossible} (7×局数) ，请调整。`);
+                    return;
                 }
 
                 // 显示计算中
-                luckSpan.textContent = "🔄 计算中 ...";
+                luckSpan.textContent = "🔄 ...";
+                yourAvgSpan.textContent = "⋯";
+                h0AvgSpan.textContent = "⋯";
+                h1AvgSpan.textContent = "⋯";
+                verdictSpan.textContent = "计算中，请稍候...";
 
-                // 稍微延迟避免阻塞UI
                 setTimeout(() => {
                     try {
-                        const index = computeLuckIndex(P, k, mu, lambda);
-                        if (index === Infinity) {
-                            luckSpan.textContent = "∞ 无限大";
-                        } else if (isNaN(index)) {
-                            luckSpan.textContent = "⚠️ 分母为零";
-                        } else {
-                            // 格式化：保留6位有效数字或科学计数
+                        const { p1, p0, index, theoryH0, theoryH1, oneDist } = computeLuckIndex(P, k, mu, lambda);
+
+                        // 幸运指数显示
+                        if (index === Infinity) luckSpan.textContent = "∞";
+                        else if (isNaN(index)) luckSpan.textContent = "⚠️ 分母为零";
+                        else {
                             if (Math.abs(index) > 1e4 || (Math.abs(index) < 1e-3 && index !== 0)) {
                                 luckSpan.textContent = index.toExponential(4);
                             } else {
                                 luckSpan.textContent = index.toFixed(6);
                             }
                         }
+
+                        // 平均显示
+                        const yourAvg = (k / P).toFixed(3);
+                        yourAvgSpan.textContent = yourAvg;
+                        h0AvgSpan.textContent = theoryH0.toFixed(3);
+                        h1AvgSpan.textContent = theoryH1.toFixed(3);
+
+                        // 评语
+                        let verdict = "";
+                        if (isNaN(index) || index === Infinity) verdict = "⚠️ 无法判断";
+                        else if (index < 3) verdict = "🔹 无证据支持你运气更好 (幸运指数 < 3)";
+                        else if (index < 10) verdict = "🔸 有较弱证据支持你运气更好 (3 ≤ 指数 < 10)";
+                        else if (index < 30) verdict = "🔶 有中等强度证据支持你运气更好 (10 ≤ 指数 < 30)";
+                        else verdict = "💰💰 今天别走了，准备赢钱吧！ (指数 ≥ 30) 💰💰";
+                        verdictSpan.textContent = verdict;
+
                     } catch (e) {
                         console.error(e);
-                        luckSpan.textContent = "❌ 计算异常";
+                        luckSpan.textContent = "❌ 异常";
+                        verdictSpan.textContent = "计算过程出错，请检查参数";
                     }
                 }, 30);
             }
 
             calcBtn.addEventListener('click', updateLuck);
-            // 回车触发
             [pInput, kInput, muInput, lambdaInput].forEach(inp => inp.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') updateLuck();
             }));
 
-            // 初始计算一次
+            // 初始计算 (以40,59为例)
             updateLuck();
         })();
     </script>
