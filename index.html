@@ -1,440 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
-    
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻将万能牌 · 贝叶斯幸运检验 · 计算器原型</title>
+    <title>麻将·幸运值计算器 (万能牌分布)</title>
     <style>
         * {
             box-sizing: border-box;
-            margin: 0;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
         }
         body {
-            background: #eef2f5;
+            background: linear-gradient(145deg, #1a3b2f 0%, #2a5a48 100%);
             min-height: 100vh;
             display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 1.5rem;
+            align-items: center;
+            margin: 0;
+            padding: 16px;
         }
-        .calculator-card {
+        .calculator {
             max-width: 720px;
             width: 100%;
-            background: #ffffff;
-            border-radius: 2.5rem;
-            box-shadow: 0 20px 40px -12px rgba(0,20,30,0.25);
-            padding: 2.2rem 2.5rem;
-            transition: all 0.2s ease;
+            background: rgba(248, 241, 229, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 48px 48px 32px 32px;
+            box-shadow: 0 25px 40px -10px rgba(0, 20, 10, 0.6), inset 0 1px 4px rgba(255, 245, 215, 0.6);
+            padding: 28px 30px 38px;
+            border: 2px solid #d8c29b;
         }
         h1 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 600;
-            letter-spacing: -0.02em;
-            color: #1a2e3b;
-            margin-bottom: 0.2rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #e6edf2;
-        }
-        .subhead {
-            color: #2c4c5e;
-            font-size: 0.95rem;
-            font-weight: 400;
-            margin-top: -0.2rem;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
-        }
-        .subhead span {
-            background: #d9e7f0;
-            padding: 0.2rem 0.8rem;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            color: #144a66;
-        }
-        .section {
-            background: #f8fbfe;
-            border-radius: 1.8rem;
-            padding: 1.5rem 1.8rem;
-            margin-bottom: 2rem;
-            border: 1px solid #dde7ed;
-        }
-        .section h2 {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1e3b4a;
-            margin-top: 0;
-            margin-bottom: 1.2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .section h2::before {
-            content: '';
-            width: 6px;
-            height: 1.8rem;
-            background: #2f7c9e;
-            border-radius: 6px;
-        }
-        .input-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.8rem 1rem;
-            margin-bottom: 1rem;
-        }
-        .input-row label {
-            font-weight: 500;
-            color: #1f4457;
-            min-width: 160px;
-            font-size: 1.05rem;
-        }
-        .input-row label i {
-            font-style: normal;
-            color: #0b3b4f;
-            background: #e2ecf3;
-            padding: 0.15rem 0.5rem;
-            border-radius: 20px;
-            margin-left: 0.4rem;
-            font-size: 0.85rem;
-            font-weight: 400;
-        }
-        .input-row input[type="number"] {
-            padding: 0.6rem 1rem;
-            border: 1px solid #cbdbe6;
-            border-radius: 40px;
-            font-size: 1rem;
-            width: 110px;
-            background: white;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
-            transition: 0.15s;
-            font-weight: 500;
-            color: #042433;
-        }
-        .input-row input[type="number"]:focus {
-            outline: none;
-            border-color: #2f7c9e;
-            box-shadow: 0 0 0 3px rgba(47,124,158,0.15);
-        }
-        .value-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 0.8rem 2rem;
-            margin-top: 0.5rem;
-            margin-bottom: 0.8rem;
-        }
-        .value-item {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: #eaf1f7;
-            padding: 0.5rem 1.2rem 0.5rem 1.5rem;
-            border-radius: 40px;
-        }
-        .value-item .label {
-            font-weight: 500;
-            color: #1d4e64;
-            font-size: 0.98rem;
-        }
-        .value-display {
-            background: white;
-            padding: 0.3rem 1rem;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 1.3rem;
-            color: #003153;
-            border: 1px solid #bdd3e0;
-            min-width: 80px;
+            margin: 0 0 8px 0;
+            color: #2c4a3b;
+            text-shadow: 2px 2px 0 #d8c8a8;
+            letter-spacing: 2px;
             text-align: center;
-            font-feature-settings: "tnum";
+            word-break: break-word;
         }
-        .unit {
-            color: #3c657b;
-            font-weight: 400;
+        .sub {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #3d2f1b;
+            background: #e6d8b5;
+            padding: 8px 20px;
+            border-radius: 60px;
+            margin: 0 0 25px 0;
+            font-style: italic;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+            border: 1px solid #b59e6b;
+        }
+        .sub strong {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.3rem;
+            background: #283b30;
+            color: #f7e9c3;
+            padding: 2px 12px;
+            border-radius: 40px;
+            margin: 0 4px;
+        }
+        .input-panel {
+            background: #4d6b56;
+            border-radius: 40px;
+            padding: 24px 28px;
+            border: 3px solid #b7a473;
+            box-shadow: inset 0 0 0 2px #2f4d3a, 0 8px 0 #1f3528;
+            margin-bottom: 28px;
+        }
+        .field-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: baseline;
+            gap: 15px 10px;
+            margin-bottom: 18px;
+        }
+        .field-row label {
+            width: 100px;
+            font-weight: 700;
+            color: #fbebb0;
+            text-shadow: 2px 2px 0 #294231;
+            font-size: 1.3rem;
+        }
+        .field-row input {
+            flex: 1 1 200px;
+            background: #faf3db;
+            border: 3px solid #b48b4b;
+            border-radius: 60px;
+            padding: 12px 22px;
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a3b2b;
+            outline: none;
+            box-shadow: inset 0 3px 8px #a0916b, 0 3px 0 #51482b;
+            transition: all 0.1s;
+            font-family: 'Courier New', monospace;
+        }
+        .field-row input:focus {
+            background: #fffaec;
+            border-color: #d9b155;
+            box-shadow: inset 0 3px 8px #9b894b, 0 4px 0 #6b562c;
+        }
+        .field-row .hint {
+            color: #ffddbb;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: #1e3a2b;
+            padding: 5px 15px;
+            border-radius: 30px;
+            white-space: nowrap;
+        }
+        .button-box {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        .calc-btn {
+            background: #f5c452;
+            border: none;
+            border-radius: 60px;
+            padding: 18px 45px;
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1f4d2b;
+            text-shadow: 2px 2px 0 #ffe19e;
+            box-shadow: 0 8px 0 #9e722b, 0 10px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            transition: 0.07s linear;
+            letter-spacing: 2px;
+            border: 2px solid #ffdc97;
+        }
+        .calc-btn:hover {
+            background: #ffda7c;
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0 #9e722b, 0 15px 20px rgba(0,0,0,0.3);
+        }
+        .calc-btn:active {
+            transform: translateY(6px);
+            box-shadow: 0 4px 0 #9e722b, 0 8px 12px rgba(0,0,0,0.3);
+        }
+        .result-panel {
+            background: #2f4e3c;
+            border-radius: 40px 40px 30px 30px;
+            padding: 22px 25px;
+            border: 3px solid #c8aa6b;
+            box-shadow: inset 0 0 0 2px #1d3527, 0 6px 0 #143021;
+            margin-top: 18px;
+        }
+        .luck-index {
+            background: #eedbba;
+            border-radius: 40px;
+            padding: 25px 20px;
+            text-align: center;
+            border: 3px solid #aa8749;
+        }
+        .luck-index .label {
+            font-size: 1.7rem;
+            font-weight: 200;
+            color: #332915;
+            letter-spacing: 3px;
+        }
+        .luck-index .value {
+            font-size: 4.5rem;
+            font-weight: 800;
+            font-family: 'Times New Roman', serif;
+            color: #1d4b28;
+            text-shadow: 3px 3px 0 #bca459;
+            line-height: 1.2;
+            word-break: break-word;
+        }
+        .formula-note {
+            font-size: 0.95rem;
+            background: #b8bb8b;
+            padding: 12px 18px;
+            border-radius: 30px;
+            color: #1d341d;
+            border: 1px solid #ebd49b;
+            margin-top: 15px;
+            text-align: center;
+        }
+        .formula-note code {
+            background: #263f2a;
+            color: #f2e0b0;
+            padding: 3px 8px;
+            border-radius: 30px;
+            font-family: monospace;
             font-size: 0.9rem;
         }
-        .param-group {
-            margin-top: 1.5rem;
-            padding-top: 0.8rem;
-            border-top: 2px dashed #cbdde9;
-        }
-        .flex-row {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem 1.8rem;
-        }
-        .hyper-param {
-            display: flex;
-            align-items: center;
-            gap: 0.8rem;
-            background: #eaf1f7;
-            padding: 0.3rem 1.2rem 0.3rem 1.5rem;
-            border-radius: 40px;
-        }
-        .hyper-param .label {
-            font-weight: 500;
-            color: #124f69;
-        }
-        .hyper-param input {
-            width: 90px;
-        }
-        .info-note {
-            font-size: 0.85rem;
-            color: #2f6680;
-            margin-top: 0.8rem;
-            background: #d9eaf3;
-            padding: 0.4rem 1.2rem;
-            border-radius: 30px;
-            display: inline-block;
-        }
-        .action-btn {
-            margin-top: 1.8rem;
-            display: flex;
-            justify-content: flex-end;
-        }
-        .btn {
-            background: #1e6c8f;
-            border: none;
-            color: white;
-            font-weight: 600;
-            font-size: 1.1rem;
-            padding: 0.9rem 2.8rem;
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 8px 18px -6px #1e6c8f70;
-            transition: 0.15s;
-            border: 1px solid #155a7a;
-            letter-spacing: 0.3px;
-        }
-        .btn:hover {
-            background: #135d80;
-            transform: scale(1.02);
-            box-shadow: 0 12px 22px -8px #0b4a68;
-        }
-        .btn:active {
-            background: #0e4b68;
-            transform: scale(0.98);
-        }
-        .footnote {
-            margin-top: 1.2rem;
-            font-size: 0.85rem;
-            color: #3d6379;
+        footer {
             text-align: center;
-            border-top: 1px solid #d0e0eb;
-            padding-top: 1rem;
-        }
-        .footnote code {
-            background: #e0edf5;
-            padding: 0.2rem 0.6rem;
-            border-radius: 30px;
-            font-size: 0.8rem;
-            color: #103e56;
-        }
-        .greek {
-            font-family: 'Times New Roman', serif;
-            font-style: italic;
+            color: #ddd0a3;
+            margin-top: 10px;
+            font-size: 0.9rem;
         }
     </style>
 </head>
 <body>
-    <div class="calculator-card">
-        <h1>🀄️ 麻将万能牌 · 贝叶斯幸运检验</h1>
-        <div class="subhead">
-            <span>贝叶斯因子占位</span> 截断泊松 · 共轭先验（原型）
-        </div>
-
-        <!-- 你的数据 区块 -->
-        <div class="section">
-            <h2>📊 你的数据</h2>
-            
-            <div class="input-row">
-                <label>总局数 N <i>对局数量</i></label>
-                <input type="number" id="N" value="10" min="1" step="1">
+    <div class="calculator">
+        <h1>🀄️ 麻 · 将 · 幸 · 运 · 值 🀄️</h1>
+        <div class="sub"><strong>Luck Index</strong> = P(M<sub>P</sub>|H₁) / P(M<sub>P</sub>|H₀)</div>
+        
+        <div class="input-panel">
+            <div class="field-row">
+                <label>🔢 局数 P</label>
+                <input type="number" id="pInput" value="3" min="1" max="20" step="1">
+                <span class="hint">1 ~ 20 局</span>
             </div>
-            <div class="input-row">
-                <label>总万能牌数 T <i>累计摸到万能牌</i></label>
-                <input type="number" id="T" value="18" min="0" step="1">
+            <div class="field-row">
+                <label>🃏 总万能牌 k</label>
+                <input type="number" id="kInput" value="5" min="0" max="140" step="1">
+                <span class="hint">0 ~ 7·P</span>
             </div>
-
-            <div class="value-row">
-                <div class="value-item">
-                    <span class="label">你的平均</span>
-                    <span class="value-display" id="avgDisplay">1.80</span>
-                    <span class="unit">/ 局</span>
-                </div>
-                <div class="value-item">
-                    <span class="label">理论 μ₀</span>
-                    <span class="value-display" id="theoryDisplay">1.2699</span>
-                    <span class="unit">/ 局</span>
-                </div>
+            <div class="field-row">
+                <label>🧪 μ (H₁)</label>
+                <input type="number" id="muInput" value="3.0" min="0.1" max="20" step="0.1">
+                <span class="hint">默认 3.0</span>
             </div>
-            <div class="info-note">
-                ⚙️ 平均自动计算；理论值目前为<strong>示例常数</strong> (1.2699) ，后续可替换为贝叶斯公式。
+            <div class="field-row">
+                <label>⚙️ λ (H₀)</label>
+                <input type="number" id="lambdaInput" value="100.0" min="10" max="500" step="1">
+                <span class="hint">默认 100</span>
+            </div>
+            <div class="button-box">
+                <button class="calc-btn" id="calcBtn">⚡ 算 运 ⚡</button>
             </div>
         </div>
 
-        <!-- 模型参数 区块 -->
-        <div class="section">
-            <h2>📐 模型参数</h2>
-
-            <div class="input-row">
-                <label>
-                    <span class="greek">λ</span> — 截断泊松参数 <i>游戏长度</i>
-                </label>
-                <input type="number" id="lambda" value="45" min="0.1" step="0.5">
+        <div class="result-panel">
+            <div class="luck-index">
+                <div class="label">🍀 幸运指数 🍀</div>
+                <div class="value" id="luckValue">—</div>
             </div>
-
-            <div class="param-group">
-                <div style="font-weight: 600; color: #1f4f66; margin-bottom: 1rem;">
-                    先验参数 (H₁) 
-                    <span style="font-weight: 400; font-size:0.9rem; background: #d2e3ed; padding: 0.2rem 0.8rem; border-radius: 30px; margin-left: 0.5rem;">Beta / Gamma 占位</span>
-                </div>
-                <div class="flex-row">
-                    <div class="hyper-param">
-                        <span class="label">α <span style="font-family: serif;">(形状)</span></span>
-                        <input type="number" id="alpha" value="2.0" step="0.1" min="0.1">
-                    </div>
-                    <div class="hyper-param">
-                        <span class="label">β <span style="font-family: serif;">(比率)</span></span>
-                        <input type="number" id="beta" value="2.0" step="0.1" min="0.1">
-                    </div>
-                </div>
-                <div style="margin-top: 0.8rem; color: #2c607b; font-size: 0.9rem;">
-                    🧪 先验参数仅为占位，等待集成真实超参数。
-                </div>
+            <div class="formula-note">
+                <code> M<sub>P</sub> = k · H₁: 截断泊松(μ·P) · H₀: P重卷积(单局分布|λ) </code>
             </div>
         </div>
-
-        <!-- 按钮区域：暂时只更新理论值（占位），以后可挂载真实公式 -->
-        <div class="action-btn">
-            <button class="btn" id="calculateBtn">🔄 运行贝叶斯检验 (公式待集成)</button>
-        </div>
-
-        <div class="footnote">
-            <code>μ₀ 当前固定为 1.2699</code>  ·  修改N/T可实时计算平均  ·  底层公式后续接入
-        </div>
+        <footer>⚙️ 单局万能牌范围 0～7 · 卷积计算 · 参数可调</footer>
     </div>
 
     <script>
         (function() {
-            // DOM 元素
-            const N_input = document.getElementById('N');
-            const T_input = document.getElementById('T');
-            const avgDisplay = document.getElementById('avgDisplay');
-            const theoryDisplay = document.getElementById('theoryDisplay');
-            const lambda_input = document.getElementById('lambda');
-            const alpha_input = document.getElementById('alpha');
-            const beta_input = document.getElementById('beta');
-            const calcBtn = document.getElementById('calculateBtn');
-
-            // --- 辅助函数：计算并更新平均 (T / N) ---
-            function updateAverage() {
-                let N = parseFloat(N_input.value);
-                let T = parseFloat(T_input.value);
-
-                // 有效性检查
-                if (isNaN(N) || N <= 0) {
-                    avgDisplay.textContent = 'N?';
-                    return;
-                }
-                if (isNaN(T) || T < 0) {
-                    T = 0;
-                }
-                const avg = T / N;
-                // 保留两位小数，但不要尾随零太多
-                avgDisplay.textContent = avg.toFixed(2);
+            // ---------- 预计算阶乘对数 (最大支持到 1500 保证安全) ----------
+            const MAX_FACT = 2000;
+            const logFact = new Array(MAX_FACT + 1).fill(0);
+            for (let i = 1; i <= MAX_FACT; i++) {
+                logFact[i] = logFact[i-1] + Math.log(i);
             }
 
-            // --- 占位理论函数：目前返回固定值 1.2699，但已预留所有参数接口 ---
-            function placeholderTheory(N, T, lambda, alpha, beta) {
-                // 🚩 这是未来你要替换的公式入口
-                // 目前返回固定的示例值 (符合图片 1.2699)
-                // 参数说明:
-                // N : 总局数, T : 总万能牌, lambda : 截断泊松参数, alpha, beta : 先验超参数
-                // 你可以在这里实现任何贝叶斯后验均值 / 后验预测 / 检验统计量
-                return 1.2699;
+            // 安全组合数对数 (若无效返回 -Infinity)
+            function logC(n, k) {
+                if (k < 0 || k > n || n < 0) return -Infinity;
+                // 使用阶乘对数
+                return logFact[n] - logFact[k] - logFact[n - k];
             }
 
-            // --- 更新理论显示 (使用占位函数) ---
-            function updateTheory() {
-                // 读取所有输入值 (做一次解析)
-                const N = parseFloat(N_input.value) || 0;
-                const T = parseFloat(T_input.value) || 0;
-                const lambda = parseFloat(lambda_input.value) || 45;
-                const alpha = parseFloat(alpha_input.value) || 2.0;
-                const beta = parseFloat(beta_input.value) || 2.0;
+            // log-sum-exp 技巧 (输入数组可能包含 -Infinity)
+            function logSumExp(logValues) {
+                let maxVal = -Infinity;
+                for (let v of logValues) {
+                    if (v > maxVal) maxVal = v;
+                }
+                if (maxVal === -Infinity) return -Infinity; // 所有项无效
+                let sumExp = 0;
+                for (let v of logValues) {
+                    if (v > -Infinity) {
+                        sumExp += Math.exp(v - maxVal);
+                    }
+                }
+                return maxVal + Math.log(sumExp);
+            }
 
-                // 调用占位公式 (后续直接修改此函数即可)
-                let theoryValue = placeholderTheory(N, T, lambda, alpha, beta);
+            // ---------- 计算单局分布 (H0 下，参数 lambda) 返回数组 P(M_A = k)  k = 0..7 ----------
+            function computeOneRoundDistrib(lambda) {
+                // 结果数组 (对数域累积)
+                const logProbK = new Array(8).fill(-Infinity);
 
-                // 如果因为无效输入导致 NaN，则显示占位符
-                if (isNaN(theoryValue)) {
-                    theoryValue = 1.2699;  // fallback
+                // 遍历 s = 2 .. 12
+                for (let s = 2; s <= 12; s++) {
+                    const w = (6 - Math.abs(s - 7)) / 36;      // 权重 (6-|s-7|)/36
+                    if (w <= 0) continue;
+                    const logW = Math.log(w);
+
+                    // 计算 Z(s) = sum_{n=53}^{136-2s} λ^n / n!
+                    const nMin = 53;
+                    const nMax = 136 - 2 * s;
+                    if (nMax < nMin) continue;
+
+                    // 收集 n 的对数项用于 logZ
+                    const logTermsForZ = [];
+                    for (let n = nMin; n <= nMax; n++) {
+                        const logTerm = n * Math.log(lambda) - logFact[n];
+                        logTermsForZ.push(logTerm);
+                    }
+                    const logZ = logSumExp(logTermsForZ);
+                    if (logZ === -Infinity) continue; // Z(s) 为零不可能，但防御
+
+                    // 遍历 n
+                    for (let n = nMin; n <= nMax; n++) {
+                        const logLambdaTerm = n * Math.log(lambda) - logFact[n]; // λ^n/n! 对数
+                        // 内部减去 logZ => 条件概率
+                        const logGivenS = logLambdaTerm - logZ; 
+
+                        const floorN4 = Math.floor(n / 4);
+                        // 限制 floorN4 有效性
+                        if (floorN4 > 136 - 2 * s) continue; 
+
+                        // 遍历 m = 0..7
+                        for (let m = 0; m <= 7; m++) {
+                            // 组合数 C(7,m)
+                            const logC7m = logC(7, m);
+                            if (logC7m === -Infinity) continue;
+
+                            // C(128, 136-2s-m)  注意 135-7 = 128
+                            const firstCombiArg = 128; // 135-7
+                            const secondIndex = 136 - 2*s - m;
+                            if (secondIndex < 0 || secondIndex > firstCombiArg) continue; // 组合无效
+                            const logC128 = logC(firstCombiArg, secondIndex);
+                            if (logC128 === -Infinity) continue;
+
+                            // C(135, 136-2s) 作为分母
+                            const logC135total = logC(135, 136 - 2*s);
+                            if (logC135total === -Infinity) continue;
+
+                            // 超几何部分: C(m, k) * C(136-2s-m, floorN4 - k) / C(136-2s, floorN4)
+                            // 但这里 k 未知, 我们针对每个 k 累加. 将内部求和放到 k 循环
+                            // 先提取公共分母 log( C(136-2s, floorN4) )
+                            const logDenomHyper = logC(136 - 2*s, floorN4);
+                            if (logDenomHyper === -Infinity) continue;
+
+                            // 对每个 k=0..7 内层求和 (实际上公式中 m 循环在内, 但这里我们把 k 循环放在最外面)
+                            // 我们在此处已经固定 s,n,m, 内层本来是对 m 求和, 但还有组合C(m,k)... 
+                            // 实际上原式: sum_s sum_n [ ... * sum_m [ ... * C(m,k) * C(...)/C(...) ] ]
+                            // 所以我们继续对 k 循环, 将贡献加入 logProbK[k]
+                            for (let k = 0; k <= 7; k++) {
+                                // 组合 C(m, k)
+                                if (k > m) continue; 
+                                const logCm_k = logC(m, k);
+                                if (logCm_k === -Infinity) continue;
+
+                                // C(136-2s-m, floorN4 - k)
+                                const remaining = 136 - 2*s - m;
+                                const need = floorN4 - k;
+                                if (need < 0 || need > remaining) continue;
+                                const logCrem_need = logC(remaining, need);
+                                if (logCrem_need === -Infinity) continue;
+
+                                // 分子超几何部分: logCm_k + logCrem_need - logDenomHyper
+                                const logHyper = logCm_k + logCrem_need - logDenomHyper;
+
+                                // 整项对数: logW + logGivenS + [logC7m + logC128 - logC135total] + logHyper
+                                let logTerm = logW + logGivenS + (logC7m + logC128 - logC135total) + logHyper;
+
+                                // 累加到 logProbK[k]  (log-sum-exp)
+                                if (logTerm > -Infinity) {
+                                    if (logProbK[k] === -Infinity) {
+                                        logProbK[k] = logTerm;
+                                    } else {
+                                        // 合并两个对数: 直接采用 logSumExp 小规模合并, 但频繁调用慢; 手动合并
+                                        // 采用常用方式: 设 a = logProbK[k], b = logTerm, 合并为 max + log(1+exp(差))
+                                        const a = logProbK[k];
+                                        const b = logTerm;
+                                        if (a > b) {
+                                            logProbK[k] = a + Math.log(1 + Math.exp(b - a));
+                                        } else {
+                                            logProbK[k] = b + Math.log(1 + Math.exp(a - b));
+                                        }
+                                    }
+                                }
+                            } // k 循环
+                        } // m 循环
+                    } // n 循环
+                } // s 循环
+
+                // 将对数概率转为真实概率，并归一化
+                let maxLog = Math.max(...logProbK);
+                if (maxLog === -Infinity) {
+                    // 保底均匀（实际不会发生）
+                    return new Array(8).fill(1/8);
+                }
+                let expVals = new Array(8);
+                let sumExp = 0;
+                for (let i = 0; i < 8; i++) {
+                    if (logProbK[i] === -Infinity) {
+                        expVals[i] = 0;
+                    } else {
+                        expVals[i] = Math.exp(logProbK[i] - maxLog);
+                        sumExp += expVals[i];
+                    }
+                }
+                // 归一化
+                for (let i = 0; i < 8; i++) {
+                    expVals[i] = sumExp > 0 ? expVals[i] / sumExp : 0;
+                }
+                return expVals; // 概率数组 [0..7]
+            }
+
+            // ---------- 卷积函数: 将分布 dist 卷积 n 次 (n>=1) ----------
+            function convolveDist(dist, n) {
+                if (n === 0) return [1]; // 零局(不会用到)
+                // dist 是概率数组, 索引为取值 0..len-1
+                let result = [1.0]; // 0 局时 P(M=0)=1
+                for (let i = 0; i < n; i++) {
+                    const newLen = result.length + dist.length - 1;
+                    const next = new Array(newLen).fill(0);
+                    // 卷积: next[t] = sum_{x} result[x] * dist[t-x]
+                    for (let x = 0; x < result.length; x++) {
+                        if (result[x] === 0) continue;
+                        for (let d = 0; d < dist.length; d++) {
+                            if (dist[d] === 0) continue;
+                            next[x + d] += result[x] * dist[d];
+                        }
+                    }
+                    result = next;
+                }
+                return result;
+            }
+
+            // ---------- 分子概率 (截断泊松 H1) ----------
+            function probH1(P, mu, k) {
+                const pMu = P * mu;
+                const maxK = 7 * P; // 最大可能万能牌数
+                if (k < 0 || k > maxK) return 0;
+                // 计算未归一化的泊松值: (pMu)^k * e^{-pMu} / k!
+                const logProbK = k * Math.log(pMu) - pMu - logFact[k];
+                // 计算归一化常数 Z = sum_{i=0}^{7P} (pMu)^i e^{-pMu} / i!
+                let logNorm = -Infinity;
+                for (let i = 0; i <= maxK; i++) {
+                    const logTerm = i * Math.log(pMu) - pMu - logFact[i];
+                    if (logNorm === -Infinity) {
+                        logNorm = logTerm;
+                    } else {
+                        const a = logNorm;
+                        const b = logTerm;
+                        if (a > b) {
+                            logNorm = a + Math.log(1 + Math.exp(b - a));
+                        } else {
+                            logNorm = b + Math.log(1 + Math.exp(a - b));
+                        }
+                    }
+                }
+                const prob = Math.exp(logProbK - logNorm);
+                return prob;
+            }
+
+            // ---------- 分母概率: 从卷积结果中查找 ----------
+            function probH0(convDist, k) {
+                if (k < 0 || k >= convDist.length) return 0;
+                return convDist[k];
+            }
+
+            // ---------- 主计算函数 ----------
+            function computeLuckIndex(P, k, mu, lambda) {
+                // 1. 计算单局分布 (H0)
+                const oneDist = computeOneRoundDistrib(lambda);
+                // 2. 计算 P 重卷积
+                const totalDist = convolveDist(oneDist, P);
+                // 3. 分母概率
+                const p0 = probH0(totalDist, k);
+                // 4. 分子概率
+                const p1 = probH1(P, mu, k);
+
+                if (p0 === 0) {
+                    return p1 > 0 ? Infinity : NaN;
+                }
+                return p1 / p0;
+            }
+
+            // ---------- UI 绑定 ----------
+            const pInput = document.getElementById('pInput');
+            const kInput = document.getElementById('kInput');
+            const muInput = document.getElementById('muInput');
+            const lambdaInput = document.getElementById('lambdaInput');
+            const calcBtn = document.getElementById('calcBtn');
+            const luckSpan = document.getElementById('luckValue');
+
+            function updateLuck() {
+                let P = parseInt(pInput.value, 10);
+                let k = parseInt(kInput.value, 10);
+                let mu = parseFloat(muInput.value);
+                let lambda = parseFloat(lambdaInput.value);
+
+                // 基本校验
+                if (isNaN(P) || P < 1) P = 1;
+                if (isNaN(k) || k < 0) k = 0;
+                if (isNaN(mu) || mu <= 0) mu = 3.0;
+                if (isNaN(lambda) || lambda <= 0) lambda = 100.0;
+
+                // 建议P不要太大防止卡顿
+                if (P > 30) {
+                    if (!confirm(`局数 P = ${P} 较大，卷积计算可能需要几秒钟，是否继续？`)) {
+                        return;
+                    }
                 }
 
-                // 格式化为保留4位小数 (图片风格)
-                theoryDisplay.textContent = theoryValue.toFixed(4);
-            }
+                // 显示计算中
+                luckSpan.textContent = "🔄 计算中 ...";
 
-            // --- 事件绑定 ---
-            // 1. N, T 变化时更新平均值 (同时为了联动，可选也更新理论？但为了符合“按钮触发”，我们不自动更新理论，但可以留个口子)
-            N_input.addEventListener('input', function() {
-                updateAverage();
-                // 如果想实现实时理论 (比如以后公式简单) 可取消下行注释
-                // updateTheory();   // 默认关闭，让按钮手动更新
-            });
-            T_input.addEventListener('input', function() {
-                updateAverage();
-                // updateTheory();   // 同上，默认手动
-            });
-
-            // 2. 点击按钮更新理论值 (目前固定，但已预留参数)
-            calcBtn.addEventListener('click', function() {
-                updateTheory();
-                // 微小的交互反馈 (可无)
-                calcBtn.style.backgroundColor = '#1a5777';
+                // 稍微延迟避免阻塞UI
                 setTimeout(() => {
-                    calcBtn.style.backgroundColor = '#1e6c8f';
-                }, 120);
-            });
+                    try {
+                        const index = computeLuckIndex(P, k, mu, lambda);
+                        if (index === Infinity) {
+                            luckSpan.textContent = "∞ 无限大";
+                        } else if (isNaN(index)) {
+                            luckSpan.textContent = "⚠️ 分母为零";
+                        } else {
+                            // 格式化：保留6位有效数字或科学计数
+                            if (Math.abs(index) > 1e4 || (Math.abs(index) < 1e-3 && index !== 0)) {
+                                luckSpan.textContent = index.toExponential(4);
+                            } else {
+                                luckSpan.textContent = index.toFixed(6);
+                            }
+                        }
+                    } catch (e) {
+                        console.error(e);
+                        luckSpan.textContent = "❌ 计算异常";
+                    }
+                }, 30);
+            }
 
-            // 3. (可选) 参数输入框改变时不做自动理论更新，维持按钮触发；如果希望自动可自行打开下面监听
-            // lambda_input.addEventListener('input', function() { /* 如果想自动更新取消注释 */ });
-            // alpha_input.addEventListener('input', function() { /* 同上 */ });
-            // beta_input.addEventListener('input', function() { /* 同上 */ });
+            calcBtn.addEventListener('click', updateLuck);
+            // 回车触发
+            [pInput, kInput, muInput, lambdaInput].forEach(inp => inp.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') updateLuck();
+            }));
 
-            // 初始化平均值 (页面加载)
-            updateAverage();
-
-            // 初始化理论显示 (确保显示1.2699，即使placeholderTheory被替换也符合预期)
-            // 但为了确保一致，调用一次
-            updateTheory();
-
-            // 额外：如果输入导致N为负数或空，自动修正提示 (但input已设min)
-            // 可以添加简单保护
-            N_input.addEventListener('blur', function() {
-                let val = parseFloat(N_input.value);
-                if (isNaN(val) || val < 1) {
-                    N_input.value = 1;
-                    updateAverage();
-                }
-            });
-            T_input.addEventListener('blur', function() {
-                let val = parseFloat(T_input.value);
-                if (isNaN(val) || val < 0) {
-                    T_input.value = 0;
-                    updateAverage();
-                }
-            });
+            // 初始计算一次
+            updateLuck();
         })();
     </script>
-
-    <!-- 简单附加说明：placeholderTheory 函数内部已预留参数，便于后续直接替换 -->
 </body>
-
 </html>
