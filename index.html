@@ -1,559 +1,729 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>麻将·幸运值计算器 (升级版·含平均值与评语)</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
-        }
-        body {
-            background: linear-gradient(145deg, #1a3b2f 0%, #2a5a48 100%);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin: 0;
-            padding: 16px;
-        }
-        .calculator {
-            max-width: 800px;
-            width: 100%;
-            background: rgba(248, 241, 229, 0.95);
-            backdrop-filter: blur(8px);
-            border-radius: 48px 48px 32px 32px;
-            box-shadow: 0 25px 40px -10px rgba(0, 20, 10, 0.6), inset 0 1px 4px rgba(255, 245, 215, 0.6);
-            padding: 28px 30px 38px;
-            border: 2px solid #d8c29b;
-        }
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 600;
-            margin: 0 0 8px 0;
-            color: #2c4a3b;
-            text-shadow: 2px 2px 0 #d8c8a8;
-            letter-spacing: 2px;
-            text-align: center;
-            word-break: break-word;
-        }
-        .sub {
-            text-align: center;
-            font-size: 1.1rem;
-            color: #3d2f1b;
-            background: #e6d8b5;
-            padding: 8px 20px;
-            border-radius: 60px;
-            margin: 0 0 25px 0;
-            font-style: italic;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-            border: 1px solid #b59e6b;
-        }
-        .sub strong {
-            font-family: 'Times New Roman', serif;
-            font-size: 1.3rem;
-            background: #283b30;
-            color: #f7e9c3;
-            padding: 2px 12px;
-            border-radius: 40px;
-            margin: 0 4px;
-        }
-        .input-panel {
-            background: #4d6b56;
-            border-radius: 40px;
-            padding: 24px 28px;
-            border: 3px solid #b7a473;
-            box-shadow: inset 0 0 0 2px #2f4d3a, 0 8px 0 #1f3528;
-            margin-bottom: 28px;
-        }
-        .field-row {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: baseline;
-            gap: 15px 10px;
-            margin-bottom: 18px;
-        }
-        .field-row label {
-            width: 100px;
-            font-weight: 700;
-            color: #fbebb0;
-            text-shadow: 2px 2px 0 #294231;
-            font-size: 1.3rem;
-        }
-        .field-row input {
-            flex: 1 1 200px;
-            background: #faf3db;
-            border: 3px solid #b48b4b;
-            border-radius: 60px;
-            padding: 12px 22px;
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #1a3b2b;
-            outline: none;
-            box-shadow: inset 0 3px 8px #a0916b, 0 3px 0 #51482b;
-            transition: all 0.1s;
-            font-family: 'Courier New', monospace;
-        }
-        .field-row input:focus {
-            background: #fffaec;
-            border-color: #d9b155;
-            box-shadow: inset 0 3px 8px #9b894b, 0 4px 0 #6b562c;
-        }
-        .field-row .hint {
-            color: #ffddbb;
-            font-size: 0.9rem;
-            font-weight: 500;
-            background: #1e3a2b;
-            padding: 5px 15px;
-            border-radius: 30px;
-            white-space: nowrap;
-        }
-        .button-box {
-            display: flex;
-            justify-content: center;
-            margin-top: 10px;
-        }
-        .calc-btn {
-            background: #f5c452;
-            border: none;
-            border-radius: 60px;
-            padding: 18px 45px;
-            font-size: 2rem;
-            font-weight: 800;
-            color: #1f4d2b;
-            text-shadow: 2px 2px 0 #ffe19e;
-            box-shadow: 0 8px 0 #9e722b, 0 10px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
-            transition: 0.07s linear;
-            letter-spacing: 2px;
-            border: 2px solid #ffdc97;
-        }
-        .calc-btn:hover {
-            background: #ffda7c;
-            transform: translateY(-3px);
-            box-shadow: 0 11px 0 #9e722b, 0 15px 20px rgba(0,0,0,0.3);
-        }
-        .calc-btn:active {
-            transform: translateY(6px);
-            box-shadow: 0 4px 0 #9e722b, 0 8px 12px rgba(0,0,0,0.3);
-        }
-        .result-panel {
-            background: #2f4e3c;
-            border-radius: 40px 40px 30px 30px;
-            padding: 22px 25px;
-            border: 3px solid #c8aa6b;
-            box-shadow: inset 0 0 0 2px #1d3527, 0 6px 0 #143021;
-            margin-top: 18px;
-        }
-        .luck-index {
-            background: #eedbba;
-            border-radius: 40px;
-            padding: 20px 20px;
-            text-align: center;
-            border: 3px solid #aa8749;
-            margin-bottom: 18px;
-        }
-        .luck-index .label {
-            font-size: 1.7rem;
-            font-weight: 200;
-            color: #332915;
-            letter-spacing: 3px;
-        }
-        .luck-index .value {
-            font-size: 4.5rem;
-            font-weight: 800;
-            font-family: 'Times New Roman', serif;
-            color: #1d4b28;
-            text-shadow: 3px 3px 0 #bca459;
-            line-height: 1.2;
-            word-break: break-word;
-        }
-        .avg-panel {
-            background: #dacaa4;
-            border-radius: 30px;
-            padding: 18px 20px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            gap: 12px;
-            border: 2px solid #b39250;
-            margin-bottom: 15px;
-        }
-        .avg-item {
-            background: #3e614b;
-            border-radius: 50px;
-            padding: 12px 18px;
-            color: #fff5cf;
-            font-weight: 600;
-            min-width: 170px;
-            text-align: center;
-            box-shadow: inset 0 2px 5px #1f3327, 0 4px 0 #1b2b20;
-        }
-        .avg-item span {
-            display: block;
-            font-size: 1.9rem;
-            font-weight: 800;
-            font-family: 'Courier New', monospace;
-            color: #fedb7a;
-            line-height: 1.3;
-        }
-        .verdict {
-            background: #b59e6b;
-            border-radius: 40px;
-            padding: 16px 22px;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #1d331f;
-            text-align: center;
-            border: 3px solid #eedba5;
-            box-shadow: inset 0 2px 5px #7f653a;
-        }
-        .formula-note {
-            font-size: 0.95rem;
-            background: #b8bb8b;
-            padding: 12px 18px;
-            border-radius: 30px;
-            color: #1d341d;
-            border: 1px solid #ebd49b;
-            margin-top: 15px;
-            text-align: center;
-        }
-        .formula-note code {
-            background: #263f2a;
-            color: #f2e0b0;
-            padding: 3px 8px;
-            border-radius: 30px;
-            font-family: monospace;
-            font-size: 0.9rem;
-        }
-        footer {
-            text-align: center;
-            color: #ddd0a3;
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>麻将幸运值计算器</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --felt: #1a5c3a;
+    --felt-dark: #0e3d25;
+    --felt-light: #2a7a50;
+    --gold: #d4a843;
+    --gold-light: #f0d080;
+    --gold-dim: #9e7a2a;
+    --ivory: #f5f0e8;
+    --tile-bg: #faf6ef;
+    --tile-shadow: #b8a88a;
+    --red: #c0392b;
+    --red-light: #e74c3c;
+    --text-dark: #2c1810;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Serif SC', serif;
+    background: var(--felt-dark);
+    color: var(--ivory);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Felt texture background */
+  .felt-bg {
+    position: fixed; inset: 0; z-index: -1;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(42,122,80,0.4) 0%, transparent 60%),
+      radial-gradient(ellipse at 70% 80%, rgba(42,122,80,0.3) 0%, transparent 50%),
+      repeating-conic-gradient(rgba(255,255,255,0.01) 0% 25%, transparent 0% 50%) 0 0 / 3px 3px,
+      var(--felt-dark);
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 30px 20px 60px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 36px;
+    position: relative;
+  }
+  .header::before, .header::after {
+    content: '🀄';
+    font-size: 28px;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.6;
+  }
+  .header::before { left: 0; }
+  .header::after { right: 0; }
+
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+  }
+  .header .subtitle {
+    font-size: 0.9rem;
+    color: var(--gold-dim);
+    margin-top: 6px;
+    letter-spacing: 0.15em;
+  }
+
+  /* Card panels */
+  .card {
+    background: linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+    border: 1px solid rgba(212,168,67,0.25);
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    margin-bottom: 20px;
+    backdrop-filter: blur(4px);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.6;
+  }
+  .card-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .icon {
+    font-size: 1.2rem;
+  }
+
+  /* Input groups */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 14px;
+  }
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .input-group label {
+    font-size: 0.82rem;
+    color: rgba(245,240,232,0.7);
+    letter-spacing: 0.04em;
+  }
+  .input-group label .hint {
+    font-size: 0.72rem;
+    color: rgba(245,240,232,0.4);
+  }
+  .input-group input {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(212,168,67,0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.05rem;
+    color: var(--ivory);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-group input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(212,168,67,0.15);
+  }
+  .input-group input::placeholder {
+    color: rgba(245,240,232,0.25);
+  }
+
+  /* Param row (smaller) */
+  .param-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .param-row input {
+    font-size: 0.92rem;
+    padding: 8px 12px;
+  }
+
+  /* Button */
+  .btn-calc {
+    display: block;
+    width: 100%;
+    padding: 14px;
+    margin-top: 8px;
+    background: linear-gradient(135deg, var(--gold-dim), var(--gold));
+    border: none;
+    border-radius: 10px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    cursor: pointer;
+    letter-spacing: 0.08em;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 4px 16px rgba(212,168,67,0.25);
+  }
+  .btn-calc:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 24px rgba(212,168,67,0.35);
+  }
+  .btn-calc:active {
+    transform: translateY(0);
+  }
+  .btn-calc:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Results */
+  .results { display: none; }
+  .results.show { display: block; }
+
+  .luck-display {
+    text-align: center;
+    padding: 20px 0 10px;
+  }
+  .luck-label {
+    font-size: 0.85rem;
+    color: rgba(245,240,232,0.6);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+  }
+  .luck-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 2.8rem;
+    font-weight: 600;
+    color: var(--gold-light);
+    text-shadow: 0 0 30px rgba(212,168,67,0.3);
+    line-height: 1.2;
+  }
+
+  .verdict {
+    text-align: center;
+    margin: 14px 0 20px;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+  .verdict.neutral {
+    background: rgba(255,255,255,0.06);
+    color: rgba(245,240,232,0.6);
+    border: 1px solid rgba(255,255,255,0.1);
+  }
+  .verdict.mild {
+    background: rgba(212,168,67,0.12);
+    color: var(--gold-light);
+    border: 1px solid rgba(212,168,67,0.3);
+  }
+  .verdict.strong {
+    background: rgba(231,76,60,0.12);
+    color: #f0a090;
+    border: 1px solid rgba(231,76,60,0.3);
+  }
+  .verdict.extreme {
+    background: linear-gradient(135deg, rgba(231,76,60,0.15), rgba(212,168,67,0.15));
+    color: #ffd700;
+    border: 1px solid rgba(255,215,0,0.4);
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+  @keyframes glow {
+    from { box-shadow: 0 0 8px rgba(255,215,0,0.1); }
+    to { box-shadow: 0 0 20px rgba(255,215,0,0.25); }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .stat-box {
+    background: rgba(0,0,0,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+    text-align: center;
+  }
+  .stat-box .stat-label {
+    font-size: 0.75rem;
+    color: rgba(245,240,232,0.5);
+    margin-bottom: 6px;
+    letter-spacing: 0.06em;
+  }
+  .stat-box .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.3rem;
+    color: var(--ivory);
+  }
+
+  /* Loading */
+  .loading-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(14,61,37,0.7);
+    backdrop-filter: blur(4px);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .loading-overlay.show {
+    display: flex;
+  }
+  .spinner {
+    width: 44px; height: 44px;
+    border: 3px solid rgba(212,168,67,0.2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    color: var(--gold-light);
+    font-size: 0.9rem;
+  }
+
+  /* Formula section */
+  .formula-toggle {
+    text-align: center;
+    margin-top: 16px;
+  }
+  .formula-toggle button {
+    background: none;
+    border: 1px solid rgba(212,168,67,0.2);
+    color: var(--gold-dim);
+    font-family: 'Noto Serif SC', serif;
+    font-size: 0.82rem;
+    padding: 6px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .formula-toggle button:hover {
+    border-color: rgba(212,168,67,0.5);
+    color: var(--gold-light);
+  }
+  .formula-detail {
+    display: none;
+    margin-top: 14px;
+    padding: 16px;
+    background: rgba(0,0,0,0.25);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: rgba(245,240,232,0.55);
+    line-height: 1.8;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .formula-detail.show { display: block; }
+
+  /* Error */
+  .error-msg {
+    display: none;
+    background: rgba(192,57,43,0.15);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 8px;
+    padding: 10px 16px;
+    color: #f0a090;
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+  .error-msg.show { display: block; }
+
+  .footer {
+    text-align: center;
+    margin-top: 30px;
+    font-size: 0.72rem;
+    color: rgba(245,240,232,0.2);
+    letter-spacing: 0.06em;
+  }
+
+  @media (max-width: 500px) {
+    .container { padding: 20px 14px 40px; }
+    .card { padding: 20px 18px; }
+    .header h1 { font-size: 1.5rem; }
+    .header::before, .header::after { display: none; }
+    .luck-value { font-size: 2.2rem; }
+  }
+</style>
 </head>
 <body>
-    <div class="calculator">
-        <h1>🀄️ 麻 · 将 · 幸 · 运 · 值 ·  PRO 🀄️</h1>
-        <div class="sub"><strong>Luck Index</strong> = P(M<sub>P</sub>|H₁) / P(M<sub>P</sub>|H₀)</div>
-        
-        <div class="input-panel">
-            <div class="field-row">
-                <label>🔢 局数 P</label>
-                <input type="number" id="pInput" value="40" min="1" step="1">
-                <span class="hint">正整数</span>
-            </div>
-            <div class="field-row">
-                <label>🃏 总万能牌 k</label>
-                <input type="number" id="kInput" value="59" min="0" max="1000" step="1">
-                <span class="hint">0 ~ 7·P</span>
-            </div>
-            <div class="field-row">
-                <label>🧪 μ (H₁)</label>
-                <input type="number" id="muInput" value="3.0" min="0.1" max="20" step="0.1">
-                <span class="hint">默认 3.0</span>
-            </div>
-            <div class="field-row">
-                <label>⚙️ λ (H₀)</label>
-                <input type="number" id="lambdaInput" value="100.0" min="10" max="500" step="1">
-                <span class="hint">默认 100</span>
-            </div>
-            <div class="button-box">
-                <button class="calc-btn" id="calcBtn">⚡ 算 运 ⚡</button>
-            </div>
-        </div>
+<div class="felt-bg"></div>
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">正在计算概率分布…</div>
+</div>
 
-        <div class="result-panel">
-            <div class="luck-index">
-                <div class="label">🍀 幸运指数 🍀</div>
-                <div class="value" id="luckValue">—</div>
-            </div>
+<div class="container">
+  <div class="header">
+    <h1>麻将幸运值计算器</h1>
+    <div class="subtitle">MAHJONG LUCK INDEX</div>
+  </div>
 
-            <!-- 新增：平均对比区域 -->
-            <div class="avg-panel" id="avgPanel">
-                <div class="avg-item">你的平均 <span id="yourAvg">—</span></div>
-                <div class="avg-item">H₀ 理论平均 <span id="h0Avg">—</span></div>
-                <div class="avg-item">H₁ 理论平均 <span id="h1Avg">—</span></div>
-            </div>
+  <!-- Input Card -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🎲</span> 对局数据</div>
+    <div class="input-row">
+      <div class="input-group">
+        <label>总局数 P</label>
+        <input type="number" id="inputP" min="1" max="500" value="" placeholder="例：10">
+      </div>
+      <div class="input-group">
+        <label>万能牌总数 k</label>
+        <input type="number" id="inputK" min="0" value="" placeholder="例：35">
+      </div>
+    </div>
+  </div>
 
-            <!-- 新增：评语区域 -->
-            <div class="verdict" id="verdictMsg">等待计算...</div>
+  <!-- Params Card -->
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> 模型参数</div>
+    <div class="param-row">
+      <div class="input-group">
+        <label>μ <span class="hint">(运气好时一局多少张万能牌/局)</span></label>
+        <input type="number" id="inputMu" step="0.1" min="0.1" value="2">
+      </div>
+      <div class="input-group">
+        <label>λ <span class="hint">(摸牌数参数)</span></label>
+        <input type="number" id="inputLambda" step="1" min="1" value="100">
+      </div>
+    </div>
+  </div>
 
-            <div class="formula-note">
-                <code> 单局万能牌0~7 · 截断泊松(H₁) vs 复杂卷积(H₀) · 参数μ/λ可调 </code>
-            </div>
-        </div>
-        <footer>⚡ 幸运指数 ≥3 弱证据 · ≥10 中等证据 · ≥30 准备赢钱 ⚡</footer>
+  <button class="btn-calc" id="btnCalc" onclick="calculate()">计 算 幸 运 值</button>
+  <div class="error-msg" id="errorMsg"></div>
+
+  <!-- Results Card -->
+  <div class="card results" id="resultsCard">
+    <div class="card-title"><span class="icon">✨</span> 计算结果</div>
+
+    <div class="luck-display">
+      <div class="luck-label">LUCK INDEX</div>
+      <div class="luck-value" id="luckValue">—</div>
     </div>
 
-    <script>
-        (function() {
-            // ---------- 预计算阶乘对数 (最大支持到 2000 保证安全) ----------
-            const MAX_FACT = 2000;
-            const logFact = new Array(MAX_FACT + 1).fill(0);
-            for (let i = 1; i <= MAX_FACT; i++) {
-                logFact[i] = logFact[i-1] + Math.log(i);
-            }
+    <div class="verdict neutral" id="verdict">等待计算</div>
 
-            function logC(n, k) {
-                if (k < 0 || k > n || n < 0) return -Infinity;
-                return logFact[n] - logFact[k] - logFact[n - k];
-            }
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-label">你的万能牌均值/局</div>
+        <div class="stat-value" id="statObserved">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">运气正常时万能牌均值/局</div>
+        <div class="stat-value" id="statTheory">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">P(k | H₁) 分子</div>
+        <div class="stat-value" id="statNum">—</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">P(k | H₀) 分母</div>
+        <div class="stat-value" id="statDen">—</div>
+      </div>
+    </div>
 
-            function logSumExp(logValues) {
-                let maxVal = -Infinity;
-                for (let v of logValues) if (v > maxVal) maxVal = v;
-                if (maxVal === -Infinity) return -Infinity;
-                let sumExp = 0;
-                for (let v of logValues) if (v > -Infinity) sumExp += Math.exp(v - maxVal);
-                return maxVal + Math.log(sumExp);
-            }
+    <div class="formula-toggle">
+      <button onclick="toggleFormula()">查看详细计算说明</button>
+    </div>
+    <div class="formula-detail" id="formulaDetail">
+      <strong style="color:var(--gold-light)">Luck Index = P(M_P=k | H₁) / P(M_P=k | H₀)</strong><br><br>
+      <strong>H₁ (分子)：截断 Poisson 分布</strong><br>
+      P(M_P=k) = (pμ)^k·e^(-pμ)/k! / Σ_{i=0}^{7p} (pμ)^i·e^(-pμ)/i!<br><br>
+      <strong>H₀ (分母)：物理模型卷积</strong><br>
+      单局分布 P(M_A=k) 基于骰子点数 s、摸牌数 n、<br>
+      万能牌在牌山中的超几何分布以及摸到手中的超几何分布。<br>
+      P 局总万能牌分布通过 P 次卷积得到。<br><br>
+      <strong>判定标准：</strong><br>
+      LI &lt; 3 → 无显著信号<br>
+      3 ≤ LI &lt; 10 → 微弱信号支持运气好<br>
+      10 ≤ LI &lt; 30 → 较强证据支持运气好<br>
+      LI ≥ 30 → 运气好炸了 🔥
+    </div>
+  </div>
 
-            // ---------- 计算单局分布 (H0 下，参数 lambda) 返回概率数组 [0..7] 以及均值 ----------
-            function computeOneRoundDistrib(lambda) {
-                const logProbK = new Array(8).fill(-Infinity);
+  <div class="footer">Mahjong Luck Index Calculator · 基于贝叶斯似然比检验</div>
+</div>
 
-                for (let s = 2; s <= 12; s++) {
-                    const w = (6 - Math.abs(s - 7)) / 36;
-                    if (w <= 0) continue;
-                    const logW = Math.log(w);
+<script>
+// ============================================================
+// Precompute log-factorials
+// ============================================================
+const MAX_N = 8000;
+const logFact = new Float64Array(MAX_N + 1);
+logFact[0] = 0;
+for (let i = 1; i <= MAX_N; i++) {
+  logFact[i] = logFact[i - 1] + Math.log(i);
+}
 
-                    const nMin = 53;
-                    const nMax = 136 - 2 * s;
-                    if (nMax < nMin) continue;
+function logFactorial(n) {
+  if (n < 0) return -Infinity;
+  if (n <= MAX_N) return logFact[n];
+  // Stirling for very large n (shouldn't happen)
+  return n * Math.log(n) - n + 0.5 * Math.log(2 * Math.PI * n);
+}
 
-                    // 计算 Z(s) = sum_{n=53}^{nMax} λ^n / n!
-                    const logTermsZ = [];
-                    for (let n = nMin; n <= nMax; n++) {
-                        logTermsZ.push(n * Math.log(lambda) - logFact[n]);
-                    }
-                    const logZ = logSumExp(logTermsZ);
-                    if (logZ === -Infinity) continue;
+function logComb(n, k) {
+  if (k < 0 || k > n) return -Infinity;
+  if (k === 0 || k === n) return 0;
+  return logFactorial(n) - logFactorial(k) - logFactorial(n - k);
+}
 
-                    for (let n = nMin; n <= nMax; n++) {
-                        const logLambdaTerm = n * Math.log(lambda) - logFact[n];
-                        const logGivenS = logLambdaTerm - logZ;   // P(n|s)
+function logSumExp(logArr) {
+  if (logArr.length === 0) return -Infinity;
+  let maxVal = -Infinity;
+  for (let i = 0; i < logArr.length; i++) {
+    if (logArr[i] > maxVal) maxVal = logArr[i];
+  }
+  if (maxVal === -Infinity) return -Infinity;
+  let sum = 0;
+  for (let i = 0; i < logArr.length; i++) {
+    if (logArr[i] > -Infinity) {
+      sum += Math.exp(logArr[i] - maxVal);
+    }
+  }
+  return maxVal + Math.log(sum);
+}
 
-                        const floorN4 = Math.floor(n / 4);
-                        if (floorN4 > 136 - 2*s) continue;
+// ============================================================
+// Single-game wild tile distribution P(M_A = k), k = 0..7
+// ============================================================
+function singleGameDist(lambda) {
+  const dist = new Float64Array(8); // k = 0..7
+  const logLambda = Math.log(lambda);
 
-                        for (let m = 0; m <= 7; m++) {
-                            const logC7m = logC(7, m);
-                            if (logC7m === -Infinity) continue;
+  for (let s = 2; s <= 12; s++) {
+    const diceProb = (6 - Math.abs(s - 7)) / 36;
+    const wallSize = 136 - 2 * s; // tiles in the wall
 
-                            const firstCombiArg = 128; // 135-7
-                            const secondIndex = 136 - 2*s - m;
-                            if (secondIndex < 0 || secondIndex > firstCombiArg) continue;
-                            const logC128 = logC(firstCombiArg, secondIndex);
-                            if (logC128 === -Infinity) continue;
+    // Compute log Z(s) = log Σ_{n=53}^{wallSize} λ^n / n!
+    const logTermsZ = [];
+    for (let n = 53; n <= wallSize; n++) {
+      logTermsZ.push(n * logLambda - logFactorial(n));
+    }
+    const logZ = logSumExp(logTermsZ);
 
-                            const logC135total = logC(135, 136 - 2*s);
-                            if (logC135total === -Infinity) continue;
+    for (let n = 53; n <= wallSize; n++) {
+      const logWeight = n * logLambda - logFactorial(n) - logZ;
+      const handSize = Math.floor(n / 4);
 
-                            const logDenomHyper = logC(136 - 2*s, floorN4);
-                            if (logDenomHyper === -Infinity) continue;
+      for (let m = 0; m <= 7; m++) {
+        // P(m wild tiles among wallSize tiles drawn from 135 total)
+        // = C(7,m) * C(128, wallSize-m) / C(135, wallSize)
+        const remNonWild = 135 - 7; // 128
+        if (wallSize - m < 0 || wallSize - m > remNonWild) continue;
+        const logPm = logComb(7, m) + logComb(remNonWild, wallSize - m) - logComb(135, wallSize);
+        if (logPm === -Infinity) continue;
 
-                            for (let k = 0; k <= 7; k++) {
-                                if (k > m) continue;
-                                const logCm_k = logC(m, k);
-                                if (logCm_k === -Infinity) continue;
+        for (let k = 0; k <= Math.min(m, handSize, 7); k++) {
+          // P(draw k wild from m wild in wallSize tiles, drawing handSize)
+          if (handSize - k < 0 || handSize - k > wallSize - m) continue;
+          const logPk = logComb(m, k) + logComb(wallSize - m, handSize - k) - logComb(wallSize, handSize);
+          if (logPk === -Infinity) continue;
 
-                                const remaining = 136 - 2*s - m;
-                                const need = floorN4 - k;
-                                if (need < 0 || need > remaining) continue;
-                                const logCrem_need = logC(remaining, need);
-                                if (logCrem_need === -Infinity) continue;
+          const contrib = diceProb * Math.exp(logWeight + logPm + logPk);
+          if (isFinite(contrib)) {
+            dist[k] += contrib;
+          }
+        }
+      }
+    }
+  }
 
-                                const logHyper = logCm_k + logCrem_need - logDenomHyper;
+  return dist;
+}
 
-                                let logTerm = logW + logGivenS + (logC7m + logC128 - logC135total) + logHyper;
+// ============================================================
+// Convolve distribution P times
+// ============================================================
+function convolve(distA, distB) {
+  const lenA = distA.length;
+  const lenB = distB.length;
+  const result = new Float64Array(lenA + lenB - 1);
+  for (let i = 0; i < lenA; i++) {
+    if (distA[i] === 0) continue;
+    for (let j = 0; j < lenB; j++) {
+      result[i + j] += distA[i] * distB[j];
+    }
+  }
+  return result;
+}
 
-                                // 合并到 logProbK[k]
-                                if (logTerm > -Infinity) {
-                                    if (logProbK[k] === -Infinity) {
-                                        logProbK[k] = logTerm;
-                                    } else {
-                                        const a = logProbK[k];
-                                        const b = logTerm;
-                                        if (a > b) {
-                                            logProbK[k] = a + Math.log(1 + Math.exp(b - a));
-                                        } else {
-                                            logProbK[k] = b + Math.log(1 + Math.exp(a - b));
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+function convolvePTimes(singleDist, P) {
+  if (P === 1) return singleDist;
+  // Use repeated squaring for efficiency
+  let result = null;
+  let base = singleDist;
+  let p = P;
 
-                // 归一化得到概率
-                let maxLog = Math.max(...logProbK);
-                if (maxLog === -Infinity) return { prob: new Array(8).fill(1/8), mean: 3.5 }; // 保底
+  while (p > 0) {
+    if (p % 2 === 1) {
+      result = result ? convolve(result, base) : base;
+    }
+    base = convolve(base, base);
+    p = Math.floor(p / 2);
+  }
+  return result;
+}
 
-                let expVals = new Array(8);
-                let sumExp = 0;
-                for (let i = 0; i < 8; i++) {
-                    expVals[i] = logProbK[i] === -Infinity ? 0 : Math.exp(logProbK[i] - maxLog);
-                    sumExp += expVals[i];
-                }
-                for (let i = 0; i < 8; i++) expVals[i] /= sumExp;
+// ============================================================
+// Truncated Poisson P(M_P = k) with mean pμ, truncated at 7p
+// ============================================================
+function truncatedPoissonPMF(k, P, mu) {
+  const mean = P * mu;
+  const maxK = 7 * P;
+  if (k < 0 || k > maxK) return 0;
 
-                // 计算均值
-                let mean = 0;
-                for (let i = 0; i < 8; i++) mean += i * expVals[i];
-                return { prob: expVals, mean: mean };
-            }
+  // log P(k) = k*log(mean) - mean - logFact(k) - log(normalization)
+  const logNumerator = k * Math.log(mean) - mean - logFactorial(k);
 
-            // 卷积函数
-            function convolveDist(dist, n) {
-                if (n === 0) return [1];
-                let result = [1.0];
-                for (let i = 0; i < n; i++) {
-                    const newLen = result.length + dist.length - 1;
-                    const next = new Array(newLen).fill(0);
-                    for (let x = 0; x < result.length; x++) {
-                        if (result[x] === 0) continue;
-                        for (let d = 0; d < dist.length; d++) {
-                            if (dist[d] === 0) continue;
-                            next[x + d] += result[x] * dist[d];
-                        }
-                    }
-                    result = next;
-                }
-                return result;
-            }
+  // log normalization = logSumExp of all terms 0..maxK
+  const logTerms = [];
+  for (let i = 0; i <= maxK; i++) {
+    logTerms.push(i * Math.log(mean) - mean - logFactorial(i));
+  }
+  const logNorm = logSumExp(logTerms);
 
-            // 分子概率 (截断泊松 H1)
-            function probH1(P, mu, k) {
-                const pMu = P * mu;
-                const maxK = 7 * P;
-                if (k < 0 || k > maxK) return 0;
+  return Math.exp(logNumerator - logNorm);
+}
 
-                const logProbK = k * Math.log(pMu) - pMu - logFact[k];
+// ============================================================
+// Theoretical mean of single-game distribution
+// ============================================================
+function theoreticalMean(singleDist) {
+  let mean = 0;
+  for (let k = 0; k < singleDist.length; k++) {
+    mean += k * singleDist[k];
+  }
+  return mean;
+}
 
-                let logNorm = -Infinity;
-                for (let i = 0; i <= maxK; i++) {
-                    const logTerm = i * Math.log(pMu) - pMu - logFact[i];
-                    if (logNorm === -Infinity) logNorm = logTerm;
-                    else {
-                        const a = logNorm, b = logTerm;
-                        logNorm = a > b ? a + Math.log(1 + Math.exp(b - a)) : b + Math.log(1 + Math.exp(a - b));
-                    }
-                }
-                return Math.exp(logProbK - logNorm);
-            }
+// ============================================================
+// Main calculation
+// ============================================================
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
 
-            // 计算理论平均(H1): 截断泊松的期望 (近似，直接使用截断前的pμ，因为截断影响很小)
-            function meanH1(P, mu) {
-                return P * mu; // 近似，实际截断后略小，但作为展示足够了
-            }
+function hideError() {
+  document.getElementById('errorMsg').classList.remove('show');
+}
 
-            // ---------- 主计算函数 ----------
-            function computeLuckIndex(P, k, mu, lambda) {
-                // 1. 单局分布 (H0)
-                const { prob: oneDist, mean: mean0 } = computeOneRoundDistrib(lambda);
-                // 2. P重卷积
-                const totalDist = convolveDist(oneDist, P);
-                // 3. 分母概率
-                const p0 = (k >= 0 && k < totalDist.length) ? totalDist[k] : 0;
-                // 4. 分子概率
-                const p1 = probH1(P, mu, k);
-                // 5. 理论平均 H0
-                const theoryH0 = mean0 * P;
-                // 6. 理论平均 H1 (近似)
-                const theoryH1 = meanH1(P, mu);
+function formatNum(x) {
+  if (x === 0) return '0';
+  if (!isFinite(x)) return '∞';
+  if (x < 1e-300) return x.toExponential(2);
+  if (x < 0.0001) return x.toExponential(3);
+  if (x < 1) return x.toPrecision(4);
+  if (x < 100) return x.toFixed(2);
+  if (x < 10000) return x.toFixed(1);
+  return x.toExponential(3);
+}
 
-                return { p1, p0, index: p0 === 0 ? (p1 > 0 ? Infinity : NaN) : p1 / p0, theoryH0, theoryH1, oneDist };
-            }
+function calculate() {
+  hideError();
 
-            // ---------- UI 绑定 ----------
-            const pInput = document.getElementById('pInput');
-            const kInput = document.getElementById('kInput');
-            const muInput = document.getElementById('muInput');
-            const lambdaInput = document.getElementById('lambdaInput');
-            const calcBtn = document.getElementById('calcBtn');
+  const P = parseInt(document.getElementById('inputP').value);
+  const k = parseInt(document.getElementById('inputK').value);
+  const mu = parseFloat(document.getElementById('inputMu').value);
+  const lambda = parseFloat(document.getElementById('inputLambda').value);
 
-            const luckSpan = document.getElementById('luckValue');
-            const yourAvgSpan = document.getElementById('yourAvg');
-            const h0AvgSpan = document.getElementById('h0Avg');
-            const h1AvgSpan = document.getElementById('h1Avg');
-            const verdictSpan = document.getElementById('verdictMsg');
+  if (!P || P < 1 || P > 500) { showError('请输入有效的总局数 P（1-500）'); return; }
+  if (isNaN(k) || k < 0) { showError('请输入有效的万能牌总数 k（≥0）'); return; }
+  if (k > 7 * P) { showError(`万能牌总数不能超过 ${7*P}（每局最多7张 × ${P}局）`); return; }
+  if (!mu || mu <= 0) { showError('μ 必须大于 0'); return; }
+  if (!lambda || lambda <= 0) { showError('λ 必须大于 0'); return; }
 
-            function updateLuck() {
-                let P = parseInt(pInput.value, 10);
-                let k = parseInt(kInput.value, 10);
-                let mu = parseFloat(muInput.value);
-                let lambda = parseFloat(lambdaInput.value);
+  const loading = document.getElementById('loading');
+  const btn = document.getElementById('btnCalc');
+  loading.classList.add('show');
+  btn.disabled = true;
 
-                if (isNaN(P) || P < 1) P = 1;
-                if (isNaN(k) || k < 0) k = 0;
-                if (isNaN(mu) || mu <= 0) mu = 3.0;
-                if (isNaN(lambda) || lambda <= 0) lambda = 100.0;
+  // Defer computation so the loading overlay renders
+  setTimeout(() => {
+    try {
+      // 1) Single game distribution
+      const singleDist = singleGameDist(lambda);
 
-                // 检查k是否超过可能最大值 (7*P)
-                const maxPossible = 7 * P;
-                if (k > maxPossible) {
-                    alert(`总万能牌数 k 不能超过 ${maxPossible} (7×局数) ，请调整。`);
-                    return;
-                }
+      // 2) Theoretical mean per game
+      const theoMean = theoreticalMean(singleDist);
 
-                // 显示计算中
-                luckSpan.textContent = "🔄 ...";
-                yourAvgSpan.textContent = "⋯";
-                h0AvgSpan.textContent = "⋯";
-                h1AvgSpan.textContent = "⋯";
-                verdictSpan.textContent = "计算中，请稍候...";
+      // 3) Convolve P times → H₀ distribution
+      const h0Dist = convolvePTimes(new Float64Array(singleDist), P);
 
-                setTimeout(() => {
-                    try {
-                        const { p1, p0, index, theoryH0, theoryH1, oneDist } = computeLuckIndex(P, k, mu, lambda);
+      // 4) P(k | H₀)
+      const pH0 = (k < h0Dist.length) ? h0Dist[k] : 0;
 
-                        // 幸运指数显示
-                        if (index === Infinity) luckSpan.textContent = "∞";
-                        else if (isNaN(index)) luckSpan.textContent = "⚠️ 分母为零";
-                        else {
-                            if (Math.abs(index) > 1e4 || (Math.abs(index) < 1e-3 && index !== 0)) {
-                                luckSpan.textContent = index.toExponential(4);
-                            } else {
-                                luckSpan.textContent = index.toFixed(6);
-                            }
-                        }
+      // 5) P(k | H₁) — truncated Poisson
+      const pH1 = truncatedPoissonPMF(k, P, mu);
 
-                        // 平均显示
-                        const yourAvg = (k / P).toFixed(3);
-                        yourAvgSpan.textContent = yourAvg;
-                        h0AvgSpan.textContent = theoryH0.toFixed(3);
-                        h1AvgSpan.textContent = theoryH1.toFixed(3);
+      // 6) Luck Index
+      let luckIndex = (pH0 > 0) ? (pH1 / pH0) : Infinity;
+      if (pH1 === 0 && pH0 === 0) luckIndex = 1; // both zero → indeterminate, treat as neutral
 
-                        // 评语
-                        let verdict = "";
-                        if (isNaN(index) || index === Infinity) verdict = "⚠️ 无法判断";
-                        else if (index < 3) verdict = "🔹 无证据支持你运气更好 (幸运指数 < 3)";
-                        else if (index < 10) verdict = "🔸 有较弱证据支持你运气更好 (3 ≤ 指数 < 10)";
-                        else if (index < 30) verdict = "🔶 有中等强度证据支持你运气更好 (10 ≤ 指数 < 30)";
-                        else verdict = "💰💰 今天别走了，准备赢钱吧！ (指数 ≥ 30) 💰💰";
-                        verdictSpan.textContent = verdict;
+      // Display
+      document.getElementById('resultsCard').classList.add('show');
+      document.getElementById('luckValue').textContent =
+        isFinite(luckIndex) ? formatNum(luckIndex) : '∞';
+      document.getElementById('statObserved').textContent = (k / P).toFixed(2);
+      document.getElementById('statTheory').textContent = theoMean.toFixed(2);
+      document.getElementById('statNum').textContent = formatNum(pH1);
+      document.getElementById('statDen').textContent = formatNum(pH0);
 
-                    } catch (e) {
-                        console.error(e);
-                        luckSpan.textContent = "❌ 异常";
-                        verdictSpan.textContent = "计算过程出错，请检查参数";
-                    }
-                }, 30);
-            }
+      // Verdict
+      const verdict = document.getElementById('verdict');
+      if (luckIndex < 3) {
+        verdict.textContent = '无显著信号 — 运气在正常范围内';
+        verdict.className = 'verdict neutral';
+      } else if (luckIndex < 10) {
+        verdict.textContent = '微弱信号 — 有一点点运气好的迹象';
+        verdict.className = 'verdict mild';
+      } else if (luckIndex < 30) {
+        verdict.textContent = '较强证据 — 运气确实不错！';
+        verdict.className = 'verdict strong';
+      } else {
+        verdict.textContent = '运气好炸了！🔥 极强证据！';
+        verdict.className = 'verdict extreme';
+      }
 
-            calcBtn.addEventListener('click', updateLuck);
-            [pInput, kInput, muInput, lambdaInput].forEach(inp => inp.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') updateLuck();
-            }));
+    } catch (e) {
+      showError('计算出错：' + e.message);
+      console.error(e);
+    } finally {
+      loading.classList.remove('show');
+      btn.disabled = false;
+    }
+  }, 50);
+}
 
-            // 初始计算 (以40,59为例)
-            updateLuck();
-        })();
-    </script>
+function toggleFormula() {
+  document.getElementById('formulaDetail').classList.toggle('show');
+}
+
+// Enter key triggers calculation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') calculate();
+});
+</script>
 </body>
 </html>
